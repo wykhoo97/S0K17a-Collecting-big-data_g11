@@ -18,7 +18,6 @@ Navigate to a folder you like to put this repo in your local device:
 
 ```
 cd ~/your/destined/folder 
-
 ```
 
 You can clone this repo by clicking the `Code` button above and copy the url and type this line in your terminal / cmd, or just copy the whole thing below
