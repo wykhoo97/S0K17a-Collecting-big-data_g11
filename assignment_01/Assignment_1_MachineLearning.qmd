@@ -1,0 +1,296 @@
+---
+title: "Group assignment 1: Machine learning"
+author: 
+  - "Student 1: XXX"
+  - "Student 2: XXX"
+  - "Student 3: XXX"
+  - "Student 4: XXX"
+format:
+  html:
+    toc: true
+number-sections: true
+warning: false
+---
+
+# Instructions
+
+-   Answer the questions below in this R Markdown file;
+-   Explain your coding decisions and output in detail;
+-   Knit the file to HTML;
+-   Send the knitted HTML file, together with the raw `rmd` file to [Cecil.Meeusen\@kuleuven.be](mailto:Cecil.Meeusen@kuleuven.be){.email};
+-   Make sure your documents are named like this: 'Assignment_1_GROUP_X';
+-   Don't forget to fill out the group members names in the YAML header;
+-   This group assignment counts for 1 out of 20 grades;
+-   This is a GROUP assignment for groups consisting of 3-4 members. If you to not meet this guideline, this will result in a 0/1 for this assignment.
+-   You may receive questions about this assignment during the oral exam; if you do not submit this assignment, you may still receive questions about it during the oral exam.
+-   The use of GenAI is allowed, but should be clearly acknowledged in the designated section below. Be as transparent as possible. Unautherized use of genAI can have severe consequences. For guidelines see <https://www.kuleuven.be/english/genai>
+-   Your assignment will be evaluated based on following criteria:
+    -   Overall insight and depth
+    -   Correctness of answers
+    -   Coherence/logical composition/structure answers
+    -   Interpretation of results
+    -   Structure of code and annotations
+    -   Appropriate use of tables and visualisations
+    -   Appropriate use of genAI and course material
+
+# 1. Unsupervised machine learning
+
+Download the 'regions.zip' file from Toledo and save it in the directory of this file ("Assignment_1_MachineLearning.qmd").
+
+Variables:
+
+-   **freehms**: Gays and lesbians free to live life as they wish (1: Agree strongly; 5: Disagree strongly)
+-   **hmsacld**: Gay and lesbian couples right to adopt children (1: Agree strongly; 5: Disagree strongly)
+-   **hmsfmlsh**: Ashamed if close family member gay or lesbian (1: Agree strongly; 5: Disagree strongly)
+-   **eqmgmbg**: Bad or good for businesses in \[country\] if equal numbers of women and men are in higher management positions (0: Very bad; 6: Very good)
+-   **eqpolbg**: Bad or good for politics in \[country\] if equal numbers of women and men are in positions of political leadership (0: Very bad; 6: Very good)
+-   **eqwrkbg**: Bad or good for family life in \[country\] if equal numbers of women and men are in paid work (0: Very bad; 6: Very good)
+-   **eqpaybg**: Bad or good for economy in \[country\] if women and men receive equal pay for doing the same work (0: Very bad; 6: Very good)
+-   **ppltrst**: Most people can be trusted or you can't be too careful (0: You can't be too careful; 10: Most people can be trusted)
+-   **pplfair**: Most people try to take advantage of you, or try to be fair (0: Most people try to take advantage of me; 10: Most people try to be fair)
+-   **pplhlp**: Most of the time people helpful or mostly looking out for themselves (0: People mostly look out for themselve; 10: People mostly try to be helpful)
+-   **trstprl**: Trust in country's parliament (0: No trust at all; 10: Complete trust)
+-   **trstlgl**: Trust in the legal system (0: No trust at all; 10: Complete trust)
+-   **trstplc**: Trust in the police (0: No trust at all; 10: Complete trust)
+-   **trstplt**: Trust in politicians (0: No trust at all; 10: Complete trust)
+-   **trstprt**: Trust in political parties (0: No trust at all; 10: Complete trust)
+-   **regunit** & **region**: **region** stipulated the region is which the respondent lives. **regunit** is the nuts level of this region.
+
+```{r}
+library(tidyverse)
+
+df_regions <- unzip("regions.zip") |> 
+  read_delim(col_names=TRUE,
+             delim=",",
+             progress=FALSE,
+             show_col_types = FALSE,
+             locale = readr::locale(encoding = "latin1")) |> 
+  mutate(across(c(freehms,hmsacld,hmsfmlsh),                                       ~ifelse(. > 5,NA,.)),        #(1)
+         across(c(eqmgmbg,eqpolbg,eqwrkbg,eqpaybg),                                ~ifelse(. > 6,NA,.)),        #(1)
+         across(c(trstprl,trstlgl,trstplc,trstplt,trstprt),                        ~ifelse(. > 10,NA,.))) |>    #(1) 
+  mutate(across(c(freehms,hmsacld),~ 6 - .))  |>                                                                #(2) 
+  group_by(regunit,region) |> 
+  mutate(n_resp = n()) |>                                                                                       #(3)
+  ungroup() |> 
+  pivot_longer(-c(regunit,region,n_resp),names_to = 'var',values_to = 'val') |>                              #(4)
+  drop_na() |>                                                                                                  #(5)
+  group_by(regunit,region,var,n_resp) |> 
+  summarise(mu = mean(val,na.rm=TRUE),
+            .groups='drop') |> 
+  pivot_wider(names_from = var,values_from = mu)                                                                #(6)  
+```
+
+## Data wrangling
+
+1.  Consider the code above and explain the lines that are indicated with (1) in your own words.
+
+Answer:
+
+2.  Consider the code above and explain the lines that are indicated with (2) in your own words.
+
+Answer:
+
+3.  Consider the code above and explain the lines that are indicated with (3) in your own words.
+
+Answer:
+
+4.  Consider the code above and explain the lines that are indicated with (4) in your own words.
+
+Answer:
+
+5.  Consider the code above and explain the lines that are indicated with (5) in your own words.
+
+Answer:
+
+5.  Consider the code above and explain the lines that are indicated with (6) in your own words.
+
+Answer:
+
+## Exploratory data analysis
+
+1.  Explore your data. What would be useful descriptive statistics to look at? Interpret the results. Add visualisations if you think these are useful.
+
+```{r}
+
+```
+
+2.  Generate a correlation table and interpret the most visible patterns. (Do not include `regunit` and `region`)
+
+```{r}
+
+```
+
+3.  Do respondents in `regunit = 2` differ in there attitudes toward gays and lesbians from respondents living in `regunit = 3`?
+
+```{r}
+
+```
+
+## Principle component analysis
+
+1.  Perform principle component analysis on the df_regions data. Write the code in chunk 'pca_chunk' below.
+
+2.  Discuss and decide how many principal components you wish to retain.
+
+Answer:
+
+3.  Discuss how you would like to label/interpret the retained principle components.
+
+Answer:
+
+4.  Do you prefer to have the observed variables standardized before running the pca? Why?
+
+Answer:
+
+5.  Do you have other suggestions to improve the analysis?
+
+Answer:
+
+6.  Explain in your own words why pca is an unsupervised machine learning alogorithm.
+
+Answer:
+
+<!-- Tip: Consider adding the scores of the PC's to df_regions by: -->
+
+```{r}
+#| eval: false
+#| echo: false
+
+n_pc<-3 #or any other number of PC's you want to retain
+# prcomp.res is the outcome of prcomp-function
+df_regions |> 
+  bind_cols(predict(prcomp.res, newdata = df_regions)[,1:n_pc])->
+  df_regions_pca
+```
+
+<!-- Tip: Consider making the region-column the name of the rows before running prcomp -->
+
+<!--        This might be helpful if you wish to make a biplot -->
+
+```{r}
+#| eval: false
+#| echo: false
+
+df_regions |> 
+  column_to_rownames("region")
+```
+
+<!-- Tip: Standardizing variables: -->
+
+```{r}
+#| eval: false
+#| echo: false
+
+df_regions |> 
+  mutate(across(c(x1,x2,...xp),~ c(scale(.))))
+```
+
+```{r, pca_chunk}
+
+
+```
+
+## Cluster analysis
+
+1.  Run k-means & hierarchical cluster analysis. Write the code in chunk 'cluster_chunk'.
+
+2.  Would you prefer to run both analyses on the retained PC's or on the original set of observed variables? Argue.
+
+Answer:
+
+3.  Would you advice to standardize the observed variables before running the cluster algorithms?
+
+Answer:
+
+4.  Would you advice to standardize the PC's before running the cluster algorithms?
+
+Answer:
+
+5.  How many clusters of regions do you wish to retain? Argue.
+
+Answer:
+
+6.  Interpret the clusters you retained. Do you have any suggestions for improving the result (e.g. omitting certain features or regions)?
+
+Answer:
+
+<!-- Tip: If you wish to add cluster membership to  df_regions_pca-->
+
+```{r}
+#| eval: false
+#| echo: false
+n_clus_hier <- 5 # or any other number of retained clusters (hierarchical)
+km               #<- outcome of a kmeans algorithm
+df_regions_pca |> 
+  mutate(cl_hierarch = cutree(hc, k = n_clus_hier),
+         cl_kmeans   = km$cluster)->
+  df_regions_pca_cl
+         
+```
+
+```{r, cluster_chunk}
+
+
+```
+
+# 2. Supervised machine learning
+
+-   Solitude detection
+-   This analysis seeks to identify individuals who report to be lonely. This instrument could be used by social organisations to predict people's risk of being lonely, after completing a short questionnaire.
+
+Download the 'solitude.zip' file from the 'datasets' chapter and save it in the directory of this file ("Assignment_1_MachineLearning.qmd").
+
+Variables:
+
+-   **lonely_obs** feeling lonely (0: no, 1:yes)
+-   **male**: respondent is mele
+-   **agea**: respondents' age
+-   **mnactic**: respondents' main activity (Retired, PaidWork, Education, Unemployed, sickDisabled, Housework, Other)
+-   **domicil**: respondent lives in: bigcity, countryside, suburb, town, village
+-   **hhmmb**: Number of people living regularly as member of household
+-   **eduyrs**: Years of full-time education completed
+-   **trust_other**: trust in other people (0: no trust, 10: a lot of trust)
+-   **health**: Subjective general health (1 : very good, 5: very bad)
+-   **netustm**: Internet use, how much time on typical day, in minutes
+-   **aesfdrk**: Feeling of safety of walking alone in local area after dark (1: Very safe, 4: very unsafe)
+-   **hlthhmp**: Hampered in daily activities by illness/disability/infirmity/mental problem (0: no, 1: yes)
+-   **hincfel**: Feeling about household's income nowadays (1: Living comfortably on present income, 4: Very difficult on present income)
+
+```{r}
+df_solitude <- unzip("solitude.zip") |> 
+  read_delim(col_names=TRUE,
+             delim=",",
+             progress=FALSE,
+             show_col_types = FALSE,
+             locale = readr::locale(encoding = "latin1"))
+  
+
+```
+
+1.  Describe the step and decisions you took when wrangling data. When there is discussion in your group about the right decision, briefly describe the different (opposing) opinions. Code this steps in the 'wrangle'-chunck.
+
+Answer:
+
+```{r, wrangle}
+
+
+```
+
+2.  Split, train and assess the supervised machine learning algorithms seen in class and select the best solution. Describe the different steps and decisions you took. When there is discussion in your group about the right decision, briefly describe the different (opposing) opinions. Code this steps in the 'ML'-chunck.
+
+Answer:
+
+```{r, ML}
+
+
+```
+
+3.  Would you advice social organisations to use your model? Why (not)? What could be improved? What would your next steps be?
+
+Answer:
+
+# Acknowledgement use of genAI
+
+If you have used genAI for this assignment, describe in detail how you have used it. If genAI gave wrong advise, please note this as well and indicate how you debugged the answers. Evaluate yourself: is this appropriate use of genAI (see KU Leuven guidelines)?
+
+Answer:
